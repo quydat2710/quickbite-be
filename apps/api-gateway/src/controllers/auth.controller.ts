@@ -9,6 +9,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -107,10 +108,22 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng nhập' })
   async login(@Body() dto: LoginDto) {
-    const result = await firstValueFrom(
-      this.userClient.send(MSG_PATTERNS.AUTH_LOGIN, dto),
-    );
-    return ApiResponse.success(result);
+    try {
+      const result = await firstValueFrom(
+        this.userClient.send(MSG_PATTERNS.AUTH_LOGIN, dto),
+      );
+      return ApiResponse.success(result);
+    } catch (error: any) {
+      // Microservice errors arrive as plain objects over TCP transport,
+      // not as HttpExceptions. Re-throw with proper HTTP status so
+      // AllExceptionsFilter can forward the message to the client.
+      const rawStatus = error?.status || error?.statusCode;
+      const status = typeof rawStatus === 'number' 
+        ? rawStatus 
+        : (typeof rawStatus === 'string' && !isNaN(Number(rawStatus)) ? Number(rawStatus) : HttpStatus.UNAUTHORIZED);
+      const message = error?.message || 'Số điện thoại hoặc mật khẩu không đúng';
+      throw new HttpException(message, status);
+    }
   }
 
   @Post('logout')

@@ -34,6 +34,16 @@ class UpdateProfileDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @ApiPropertyOptional({ enum: ['CUSTOMER', 'RESTAURANT_OWNER', 'DRIVER'] })
+  @IsOptional()
+  @IsString()
+  role?: string;
+
+  @ApiPropertyOptional({ description: 'URL ảnh đại diện (từ Cloudinary)' })
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
 }
 
 class CreateAddressDto {

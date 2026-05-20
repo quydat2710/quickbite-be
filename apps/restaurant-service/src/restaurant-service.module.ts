@@ -24,7 +24,8 @@ import { Review } from './entities/review.entity';
         database: config.get('DB_RESTAURANT_DATABASE', 'quickbite_restaurants'),
         entities: [Restaurant, RestaurantCategory, Review],
         synchronize: config.get('NODE_ENV') === 'development',
-        logging: config.get('NODE_ENV') === 'development',
+        logging: config.get('NODE_ENV') === 'development' ? ['error', 'warn'] : false,
+        maxQueryExecutionTime: 1000, // Log queries slower than 1s
       }),
       inject: [ConfigService],
     }),

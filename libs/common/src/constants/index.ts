@@ -73,6 +73,15 @@ export const MSG_PATTERNS = {
   PAYMENT_GET: 'payment.get',
   PAYMENT_CALLBACK: 'payment.callback',
   PAYMENT_LIST_BY_ORDER: 'payment.listByOrder',
+
+  // Driver
+  DRIVER_AVAILABLE_ORDERS: 'driver.availableOrders',
+  DRIVER_MY_DELIVERIES: 'driver.myDeliveries',
+  DRIVER_ACCEPT_ORDER: 'driver.acceptOrder',
+  DRIVER_PICKUP_ORDER: 'driver.pickupOrder',
+  DRIVER_DELIVER_ORDER: 'driver.deliverOrder',
+  DRIVER_HISTORY: 'driver.history',
+  DRIVER_EARNINGS: 'driver.earnings',
 } as const;
 
 // ── Kafka Topics (Phase 2+) ──

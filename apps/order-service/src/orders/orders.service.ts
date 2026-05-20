@@ -229,6 +229,118 @@ export class OrdersService {
     return order;
   }
 
+  // ══════════ DRIVER METHODS ══════════
+
+  /** Orders ready for pickup (no driver assigned yet) */
+  async driverAvailableOrders(query: { page: number; limit: number }) {
+    const [orders, total] = await this.orderRepo.findAndCount({
+      where: { status: OrderStatus.READY, driverId: null as any },
+      order: { createdAt: 'DESC' },
+      skip: ((query.page || 1) - 1) * (query.limit || 10),
+      take: query.limit || 10,
+      relations: ['items'],
+    });
+    return ApiResponse.paginated(orders, total, query.page || 1, query.limit || 10);
+  }
+
+  /** Orders currently assigned to this driver (active deliveries) */
+  async driverMyDeliveries(driverId: string) {
+    const orders = await this.orderRepo.find({
+      where: [
+        { driverId, status: OrderStatus.PICKED_UP },
+        { driverId, status: OrderStatus.READY },
+      ],
+      order: { createdAt: 'DESC' },
+      relations: ['items'],
+    });
+    return orders;
+  }
+
+  /** Driver accepts an order */
+  async driverAcceptOrder(data: { orderId: string; driverId: string }) {
+    const order = await this.orderRepo.findOne({ where: { id: data.orderId } });
+    if (!order) throw new NotFoundException('Đơn hàng không tồn tại');
+    if (order.status !== OrderStatus.READY) {
+      throw new BadRequestException('Đơn hàng chưa sẵn sàng để giao');
+    }
+    if (order.driverId) {
+      throw new BadRequestException('Đơn hàng đã có tài xế nhận');
+    }
+    order.driverId = data.driverId;
+    await this.orderRepo.save(order);
+    this.logger.log(`Driver ${data.driverId} accepted order ${order.id}`);
+    return order;
+  }
+
+  /** Driver picked up the order */
+  async driverPickupOrder(data: { orderId: string; driverId: string }) {
+    const order = await this.orderRepo.findOne({ where: { id: data.orderId, driverId: data.driverId } });
+    if (!order) throw new NotFoundException('Đơn hàng không tồn tại hoặc không phải của bạn');
+    if (order.status !== OrderStatus.READY) {
+      throw new BadRequestException('Đơn chưa sẵn sàng để lấy');
+    }
+    order.status = OrderStatus.PICKED_UP;
+    order.pickedUpAt = new Date();
+    await this.orderRepo.save(order);
+    this.logger.log(`Driver ${data.driverId} picked up order ${order.id}`);
+    return order;
+  }
+
+  /** Driver delivered the order */
+  async driverDeliverOrder(data: { orderId: string; driverId: string }) {
+    const order = await this.orderRepo.findOne({ where: { id: data.orderId, driverId: data.driverId } });
+    if (!order) throw new NotFoundException('Đơn hàng không tồn tại hoặc không phải của bạn');
+    if (order.status !== OrderStatus.PICKED_UP) {
+      throw new BadRequestException('Đơn chưa được lấy');
+    }
+    order.status = OrderStatus.DELIVERED;
+    order.deliveredAt = new Date();
+    await this.orderRepo.save(order);
+    this.logger.log(`Driver ${data.driverId} delivered order ${order.id}`);
+    return order;
+  }
+
+  /** Driver delivery history */
+  async driverHistory(query: { driverId: string; page: number; limit: number }) {
+    const [orders, total] = await this.orderRepo.findAndCount({
+      where: { driverId: query.driverId, status: OrderStatus.DELIVERED },
+      order: { deliveredAt: 'DESC' },
+      skip: ((query.page || 1) - 1) * (query.limit || 10),
+      take: query.limit || 10,
+      relations: ['items'],
+    });
+    return ApiResponse.paginated(orders, total, query.page || 1, query.limit || 10);
+  }
+
+  /** Driver earnings summary */
+  async driverEarnings(driverId: string) {
+    // Total deliveries + total earned delivery fees
+    const result = await this.orderRepo
+      .createQueryBuilder('o')
+      .select('COUNT(o.id)', 'totalDeliveries')
+      .addSelect('COALESCE(SUM(o.deliveryFee), 0)', 'totalEarnings')
+      .where('o.driverId = :driverId', { driverId })
+      .andWhere('o.status = :status', { status: OrderStatus.DELIVERED })
+      .getRawOne();
+
+    // Today's earnings
+    const today = await this.orderRepo
+      .createQueryBuilder('o')
+      .select('COUNT(o.id)', 'todayDeliveries')
+      .addSelect('COALESCE(SUM(o.deliveryFee), 0)', 'todayEarnings')
+      .where('o.driverId = :driverId', { driverId })
+      .andWhere('o.status = :status', { status: OrderStatus.DELIVERED })
+      .andWhere('o.deliveredAt >= CURRENT_DATE')
+      .getRawOne();
+
+    return {
+      totalDeliveries: parseInt(result.totalDeliveries) || 0,
+      totalEarnings: parseInt(result.totalEarnings) || 0,
+      todayDeliveries: parseInt(today.todayDeliveries) || 0,
+      todayEarnings: parseInt(today.todayEarnings) || 0,
+    };
+  }
+
   // ── Helpers ──
   private isValidTransition(from: OrderStatus, to: OrderStatus): boolean {
     const transitions: Record<string, OrderStatus[]> = {

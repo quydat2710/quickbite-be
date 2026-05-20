@@ -23,7 +23,8 @@ import { OtpRequest } from './entities/otp-request.entity';
         database: config.get('DB_USER_DATABASE', 'quickbite_users'),
         entities: [User, UserAddress, RefreshToken, OtpRequest],
         synchronize: config.get('NODE_ENV') === 'development', // auto-sync in dev
-        logging: config.get('NODE_ENV') === 'development',
+        logging: config.get('NODE_ENV') === 'development' ? ['error', 'warn'] : false,
+        maxQueryExecutionTime: 1000, // Log queries slower than 1s
       }),
       inject: [ConfigService],
     }),

@@ -32,8 +32,8 @@ export class User {
   @Column({ type: 'enum', enum: UserRole, default: UserRole.CUSTOMER })
   role: UserRole;
 
-  @Column({ type: 'enum', enum: ['ACTIVE', 'BANNED', 'PENDING'], default: 'ACTIVE' })
-  status: 'ACTIVE' | 'BANNED' | 'PENDING';
+  @Column({ type: 'enum', enum: ['ACTIVE', 'BANNED', 'PENDING', 'INCOMPLETE'], default: 'ACTIVE' })
+  status: 'ACTIVE' | 'BANNED' | 'PENDING' | 'INCOMPLETE';
 
   // ── Social login ──
   @Column({ type: 'varchar', nullable: true })

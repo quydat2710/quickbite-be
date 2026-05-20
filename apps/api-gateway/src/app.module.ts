@@ -4,10 +4,12 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { SERVICES } from '@app/common';
+import { AuthGuard } from './guards/auth.guard';
 import { AuthController } from './controllers/auth.controller';
 import { UsersController } from './controllers/users.controller';
 import { RestaurantsController } from './controllers/restaurants.controller';
 import { OrdersController } from './controllers/orders.controller';
+import { DriverController } from './controllers/driver.controller';
 import { JwtMiddlewareModule } from './middleware/jwt.module';
 
 @Module({
@@ -72,9 +74,10 @@ import { JwtMiddlewareModule } from './middleware/jwt.module';
     // ── JWT Middleware ──
     JwtMiddlewareModule,
   ],
-  controllers: [AuthController, UsersController, RestaurantsController, OrdersController],
+  controllers: [AuthController, UsersController, RestaurantsController, OrdersController, DriverController],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: AuthGuard },
   ],
 })
 export class AppModule {}

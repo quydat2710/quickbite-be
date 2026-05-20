@@ -24,7 +24,7 @@ export class AuthController {
 
   @MessagePattern(MSG_PATTERNS.AUTH_LOGIN)
   async login(@Payload() data: { phone: string; password: string }) {
-    return this.authService.login(data.phone, data.password);
+    return this.authService.login(data.phone, data.password);  // phone field acts as identifier (phone or email)
   }
 
   @MessagePattern(MSG_PATTERNS.AUTH_LOGOUT)

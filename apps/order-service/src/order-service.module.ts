@@ -20,7 +20,8 @@ import { OrderItem } from './entities/order-item.entity';
         database: config.get('DB_ORDER_DATABASE', 'quickbite_orders'),
         entities: [Order, OrderItem],
         synchronize: config.get('NODE_ENV') === 'development',
-        logging: config.get('NODE_ENV') === 'development',
+        logging: config.get('NODE_ENV') === 'development' ? ['error', 'warn'] : false,
+        maxQueryExecutionTime: 1000, // Log queries slower than 1s
       }),
       inject: [ConfigService],
     }),

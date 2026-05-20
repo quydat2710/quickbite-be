@@ -36,4 +36,40 @@ export class OrdersController {
   async updateStatus(@Payload() data: { orderId: string; userId: string; status: string; role: string }) {
     return this.ordersService.updateStatus(data);
   }
+
+  // ── Driver ──
+  @MessagePattern(MSG_PATTERNS.DRIVER_AVAILABLE_ORDERS)
+  async driverAvailableOrders(@Payload() data: { page: number; limit: number }) {
+    return this.ordersService.driverAvailableOrders(data);
+  }
+
+  @MessagePattern(MSG_PATTERNS.DRIVER_MY_DELIVERIES)
+  async driverMyDeliveries(@Payload() data: { driverId: string }) {
+    return this.ordersService.driverMyDeliveries(data.driverId);
+  }
+
+  @MessagePattern(MSG_PATTERNS.DRIVER_ACCEPT_ORDER)
+  async driverAcceptOrder(@Payload() data: { orderId: string; driverId: string }) {
+    return this.ordersService.driverAcceptOrder(data);
+  }
+
+  @MessagePattern(MSG_PATTERNS.DRIVER_PICKUP_ORDER)
+  async driverPickupOrder(@Payload() data: { orderId: string; driverId: string }) {
+    return this.ordersService.driverPickupOrder(data);
+  }
+
+  @MessagePattern(MSG_PATTERNS.DRIVER_DELIVER_ORDER)
+  async driverDeliverOrder(@Payload() data: { orderId: string; driverId: string }) {
+    return this.ordersService.driverDeliverOrder(data);
+  }
+
+  @MessagePattern(MSG_PATTERNS.DRIVER_HISTORY)
+  async driverHistory(@Payload() data: { driverId: string; page: number; limit: number }) {
+    return this.ordersService.driverHistory(data);
+  }
+
+  @MessagePattern(MSG_PATTERNS.DRIVER_EARNINGS)
+  async driverEarnings(@Payload() data: { driverId: string }) {
+    return this.ordersService.driverEarnings(data.driverId);
+  }
 }

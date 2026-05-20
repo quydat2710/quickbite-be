@@ -18,7 +18,8 @@ import { Payment } from './entities/payment.entity';
         database: config.get('DB_PAYMENT_DATABASE', 'quickbite_payments'),
         entities: [Payment],
         synchronize: config.get('NODE_ENV') === 'development',
-        logging: config.get('NODE_ENV') === 'development',
+        logging: config.get('NODE_ENV') === 'development' ? ['error', 'warn'] : false,
+        maxQueryExecutionTime: 1000, // Log queries slower than 1s
       }),
       inject: [ConfigService],
     }),
