@@ -144,8 +144,6 @@ export class AuthService {
       if (user.status === 'BANNED') {
         throw new RpcException({ statusCode: HttpStatus.UNAUTHORIZED, message: 'Tài khoản đã bị khoá' });
       }
-
-      this.logger.debug(`Login: user found, comparing password...`);
       const isValid = await bcrypt.compare(password, user.passwordHash);
       if (!isValid) {
         throw new RpcException({ statusCode: HttpStatus.UNAUTHORIZED, message: 'Số điện thoại hoặc mật khẩu không đúng' });
